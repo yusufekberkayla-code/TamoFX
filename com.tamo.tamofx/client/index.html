@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TamoFX</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; user-select: none; }
+        body { background-color: #0b0a12; color: #e5e5f0; height: 100vh; overflow: hidden; }
+        .app-container { display: flex; height: 100%; }
+
+        /* SIDEBAR */
+        .sidebar { width: 68px; background: #08070d; border-right: 1px solid #1c1a28; display: flex; flex-direction: column; align-items: center; padding: 14px 0; }
+        .brand { text-align: center; margin-bottom: 24px; }
+        .logo-text { font-size: 18px; font-weight: 900; background: linear-gradient(135deg, #a855f7, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: block; }
+        .brand-sub { font-size: 8px; color: #6366f1; font-weight: 700; }
+        .nav-menu { display: flex; flex-direction: column; width: 100%; gap: 8px; }
+        .nav-btn { background: transparent; border: none; color: #6d6b84; padding: 10px 0; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; font-size: 9px; font-weight: 700; width: 100%; border-left: 3px solid transparent; transition: all 0.2s; }
+        .nav-btn.active { color: #fff; background: #151324; border-left-color: #a855f7; }
+
+        /* MAIN CONTENT */
+        .main-content { flex: 1; padding: 14px; overflow-y: auto; background: #0d0c17; height: 100%; }
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .app-title { font-size: 14px; font-weight: 700; color: #9493a8; }
+        .demo-tag { background: #49137d; color: #e9d5ff; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+
+        .section-heading { font-size: 10px; font-weight: 700; color: #6d6b84; letter-spacing: 0.5px; margin-bottom: 10px; }
+
+        /* 4 HIZ EĞRİSİ (SPEED GRAPH) */
+        .curve-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+        .curve-card { background: #141322; border: 1px solid #232138; border-radius: 8px; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.2s; text-align: center; }
+        .curve-card:hover { border-color: #a855f7; transform: translateY(-2px); }
+        .curve-svg { width: 70px; height: 42px; margin-bottom: 6px; }
+        .curve-card span { font-size: 10px; font-weight: 700; color: #a5a4be; }
+
+        /* SES EFEKTLERİ */
+        .sfx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-bottom: 20px; }
+        .sfx-card { background: #141322; border: 1px solid #232138; border-radius: 6px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; }
+        .sfx-info h4 { font-size: 11px; font-weight: 700; color: #e5e5f0; }
+        .sfx-info span { font-size: 9px; color: #706f86; }
+        .sfx-actions { display: flex; gap: 4px; }
+        .btn-preview { flex: 1; background: #581c87; border: none; color: #fff; padding: 6px 0; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: 600; }
+        .btn-preview:hover { background: #6b21a8; }
+        .btn-insert { flex: 1; background: #059669; border: none; color: #fff; padding: 6px 0; border-radius: 4px; font-weight: 700; font-size: 10px; cursor: pointer; }
+        .btn-insert:hover { background: #047857; }
+
+        /* LİSTE KARTLARI */
+        .list-group { display: flex; flex-direction: column; gap: 8px; padding-bottom: 20px; }
+        .item-row { background: #141322; border: 1px solid #232138; border-radius: 6px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; }
+        .item-row h4 { font-size: 11px; font-weight: 700; color: #e5e5f0; }
+        .item-row span { font-size: 9px; color: #706f86; }
+        
+        .btn-apply { background: #9333ea; border: none; color: #fff; padding: 6px 14px; border-radius: 4px; font-weight: 700; font-size: 10px; cursor: pointer; }
+        .btn-apply:hover { background: #7e22ce; }
+        .btn-danger { width: 100%; background: #dc2626; color: #fff; border: none; border-radius: 6px; padding: 8px; font-weight: 700; font-size: 11px; cursor: pointer; margin-top: 10px; }
+        .btn-danger:hover { background: #b91c1c; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- SOL SIDEBAR -->
+        <aside class="sidebar">
+            <div class="brand">
+                <span class="logo-text">TFX</span>
+                <span class="brand-sub">TAMOFX</span>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-btn active" onclick="switchTab('curves', this)">
+                    <span style="font-size: 15px;">📈</span>
+                    <span>CURVES</span>
+                </button>
+                <button class="nav-btn" onclick="switchTab('shake', this)">
+                    <span style="font-size: 15px;">📳</span>
+                    <span>SHAKE</span>
+                </button>
+                <button class="nav-btn" onclick="switchTab('presets', this)">
+                    <span style="font-size: 15px;">⚡</span>
+                    <span>PRESETS</span>
+                </button>
+                <button class="nav-btn" onclick="switchTab('sfx', this)">
+                    <span style="font-size: 15px;">🔊</span>
+                    <span>SFX</span>
+                </button>
+                <button class="nav-btn" onclick="switchTab('text', this)">
+                    <span style="font-size: 15px;">Aa</span>
+                    <span>TEXT</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- SAĞ PANEL -->
+        <main class="main-content">
+            <header class="top-header">
+                <span class="app-title">TamoFX</span>
+                <span class="demo-tag">DEMO</span>
+            </header>
+
+            <!-- 1. GRAFİK EĞRİLERİ (4 ADET SPEED GRAPH) -->
+            <section id="curves" class="tab-pane active">
+                <div class="section-heading">4 HIZ EĞRİSİ (SPEED GRAPH)</div>
+                <div class="curve-grid">
+                    <div class="curve-card" onclick="applyEase(75, 75)">
+                        <svg viewBox="0 0 100 60" class="curve-svg">
+                            <path d="M10 50 C 45 50, 55 10, 90 10" stroke="#b052ff" fill="none" stroke-width="3"/>
+                            <circle cx="10" cy="50" r="3.5" fill="#fff"/>
+                            <circle cx="90" cy="10" r="3.5" fill="#fff"/>
+                        </svg>
+                        <span>EASE IN-OUT</span>
+                    </div>
+
+                    <div class="curve-card" onclick="applyEase(15, 85)">
+                        <svg viewBox="0 0 100 60" class="curve-svg">
+                            <path d="M10 50 C 10 20, 45 10, 90 10" stroke="#b052ff" fill="none" stroke-width="3"/>
+                            <circle cx="10" cy="50" r="3.5" fill="#fff"/>
+                            <circle cx="90" cy="10" r="3.5" fill="#fff"/>
+                        </svg>
+                        <span>FAST IN</span>
+                    </div>
+
+                    <div class="curve-card" onclick="applyEase(85, 15)">
+                        <svg viewBox="0 0 100 60" class="curve-svg">
+                            <path d="M10 50 C 55 50, 90 40, 90 10" stroke="#b052ff" fill="none" stroke-width="3"/>
+                            <circle cx="10" cy="50" r="3.5" fill="#fff"/>
+                            <circle cx="90" cy="10" r="3.5" fill="#fff"/>
+                        </svg>
+                        <span>SMOOTH OUT</span>
+                    </div>
+
+                    <div class="curve-card" onclick="applyEase(95, 15)">
+                        <svg viewBox="0 0 100 60" class="curve-svg">
+                            <path d="M10 50 C 10 10, 40 10, 90 10" stroke="#b052ff" fill="none" stroke-width="3"/>
+                            <circle cx="10" cy="50" r="3.5" fill="#fff"/>
+                            <circle cx="90" cy="10" r="3.5" fill="#fff"/>
+                        </svg>
+                        <span>SNAP POP</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. SHAKE (KAMERA SARSINTISI) -->
+            <section id="shake" class="tab-pane">
+                <div class="section-heading">KAMERA SARSINTILARI</div>
+                <div class="curve-grid">
+                    <div class="curve-card" onclick="runShake('subtle')">
+                        <span style="font-size: 24px; margin-bottom: 4px;">🍃</span>
+                        <span>SUBTLE FLOAT</span>
+                    </div>
+                    <div class="curve-card" onclick="runShake('heavy')">
+                        <span style="font-size: 24px; margin-bottom: 4px;">💥</span>
+                        <span>HEAVY HIT</span>
+                    </div>
+                    <div class="curve-card" onclick="runShake('earthquake')">
+                        <span style="font-size: 24px; margin-bottom: 4px;">⚡</span>
+                        <span>EARTHQUAKE</span>
+                    </div>
+                    <div class="curve-card" onclick="runShake('glitch')">
+                        <span style="font-size: 24px; margin-bottom: 4px;">📺</span>
+                        <span>GLITCH SHAKE</span>
+                    </div>
+                </div>
+                <button class="btn-danger" onclick="clearShake()">🚫 Sarsıntıyı Kaldır</button>
+            </section>
+
+            <!-- 3. PRESETS -->
+            <section id="presets" class="tab-pane">
+                <div class="section-heading">2 HAZIR ANİMASYON PRESETİ</div>
+                <div class="list-group">
+                    <div class="item-row">
+                        <div>
+                            <h4>Dynamic Zoom In</h4>
+                            <span>Timeline'daki Katmanı Büyüt</span>
+                        </div>
+                        <button class="btn-apply" onclick="applyPreset('zoomin')">+ Uygula</button>
+                    </div>
+                    <div class="item-row">
+                        <div>
+                            <h4>Smooth Rotation Swing</h4>
+                            <span>Açısal Denge Hareketi</span>
+                        </div>
+                        <button class="btn-apply" onclick="applyPreset('rotationswing')">+ Uygula</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. SES EFEKTLERİ (10 ADET SFX) -->
+            <section id="sfx" class="tab-pane">
+                <div class="section-heading">10 ADET DAHİLİ SES EFEKTİ</div>
+                <div class="sfx-grid">
+                    <div class="sfx-card">
+                        <div class="sfx-info"><h4>Big Anime Swing</h4><span>Geçiş • 0.6s</span></div>
+                        <div class="sfx-actions">
+                            <button class="btn-preview" onclick="previewSFX('anime_swing')">▶ Dinle</button>
+                            <button class="btn-insert" onclick="insertSFXToTimeline('anime_swing')">+ Ekle</button>
+                        </div>
+                    </div>
+                    <div class="sfx-card">
+                        <div class="sfx-info"><h4>Caution Ambience</h4><span>Vurgu • 1.2s</span></div>
+                        <div class="sfx-actions">
+                            <button class="btn-preview" onclick="previewSFX('caution')">▶ Dinle</button>
+                            <button class="btn-insert" onclick="insertSFXToTimeline('caution')">+ Ekle</button>
+                        </div>
+                    </div>
+                    <div class="sfx-card">
+                        <div class="sfx-info"><h4>Flick SFX</h4><span>UI • 0.2s</span></div>
+                        <div class="sfx-actions">
+                            <button class="btn-preview" onclick="previewSFX('flick')">▶ Dinle</button>
+                            <button class="btn-insert" onclick="insertSFXToTimeline('flick')">+ Ekle</button>
+                        </div>
+                    </div>
+                    <div class="sfx-card">
+                        <div class="sfx-info"><h4>Cinematic Impact</h4><span>Vurgu • 0.8s</span></div>
+                        <div class="sfx-actions">
+                            <button class="btn-preview" onclick="previewSFX('impact')">▶ Dinle</button>
+                            <button class="btn-insert" onclick="insertSFXToTimeline('impact')">+ Ekle</button>
+                        </div>
+                    </div>
+                    <div class="sfx-card">
+                        <div class="sfx-info"><h4>Pop Click</h4><span>UI • 0.3s</span></div>
+                        <div class="sfx-actions">
+                            <button class="btn-preview" onclick="previewSFX('click')">▶ Dinle</button>
+                            <button class="btn-insert" onclick="insertSFXToTimeline('click')">+ Ekle</button>
+                        </div>
+                    </div>
+                    <div class="sfx-card">
+                        <div class="sfx-info"><h4>Whoosh Fast</h4><span>Geçiş • 0.4s</span></div>
+                        <div class="sfx-actions">
+                            <button class="btn-preview" onclick="previewSFX('whoosh')">▶ Dinle</button>
+                            <button class="btn-insert" onclick="insertSFXToTimeline('whoosh')">+ Ekle</button>
+                        </div>
+                    </div>
+                    <div class="sfx-card">
+                        <div class="sfx-info"><h4>Glitch Sound</h4><span>Efekt • 0.5s</span></div>
+                        <div class="sfx-actions">
+                            <button class="btn-preview" onclick="previewSFX('glitch')">▶ Dinle</button>
+                            <button class="btn-insert" onclick="insertSFXToTimeline('glitch')">+ Ekle</button>
+                        </div>
+                    </div>
+                    <div class="sfx-card">
+                        <div class="sfx-info"><h4>Deep Bass Drop</h4><span>Atmosfer • 1.4s</span></div>
+                        <div class="sfx-actions">
+                            <button class="btn-preview" onclick="previewSFX('bass_drop')">▶ Dinle</button>
+                            <button class="btn-insert" onclick="insertSFXToTimeline('bass_drop')">+ Ekle</button>
+                        </div>
+                    </div>
+                    <div class="sfx-card">
+                        <div class="sfx-info"><h4>Camera Shutter</h4><span>UI • 0.2s</span></div>
+                        <div class="sfx-actions">
+                            <button class="btn-preview" onclick="previewSFX('shutter')">▶ Dinle</button>
+                            <button class="btn-insert" onclick="insertSFXToTimeline('shutter')">+ Ekle</button>
+                        </div>
+                    </div>
+                    <div class="sfx-card">
+                        <div class="sfx-info"><h4>Riser Build Up</h4><span>Geçiş • 1.0s</span></div>
+                        <div class="sfx-actions">
+                            <button class="btn-preview" onclick="previewSFX('riser')">▶ Dinle</button>
+                            <button class="btn-insert" onclick="insertSFXToTimeline('riser')">+ Ekle</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. YAZI ANİMASYONLARI (5 ADET METİN ŞABLONU) -->
+            <section id="text" class="tab-pane">
+                <div class="section-heading">5 HAZIR YAZI ŞABLONU (TIMELINE'A OLUŞTUR)</div>
+                <div class="list-group">
+                    <div class="item-row">
+                        <div><h4>Drop Text Title</h4><span>Dinamik Düşen Metin Efekti</span></div>
+                        <button class="btn-apply" onclick="applyTextAnimToTimeline('droptext')">+ Ekle</button>
+                    </div>
+                    <div class="item-row">
+                        <div><h4>Jenerik Intro Text</h4><span>Sinematik Açılış Jeneriği</span></div>
+                        <button class="btn-apply" onclick="applyTextAnimToTimeline('jenerik')">+ Ekle</button>
+                    </div>
+                    <div class="item-row">
+                        <div><h4>Simple Typewriter</h4><span>Minimal Daktilo Yazı Efekti</span></div>
+                        <button class="btn-apply" onclick="applyTextAnimToTimeline('typewriter')">+ Ekle</button>
+                    </div>
+                    <div class="item-row">
+                        <div><h4>Text Elite Preset</h4><span>Modern Dinamik Başlık Preseti</span></div>
+                        <button class="btn-apply" onclick="applyTextAnimToTimeline('elite')">+ Ekle</button>
+                    </div>
+                    <div class="item-row">
+                        <div><h4>Typography Title</h4><span>Büyük Tipografi Vurgusu</span></div>
+                        <button class="btn-apply" onclick="applyTextAnimToTimeline('typography')">+ Ekle</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="CSInterface.js"></script>
+    <script>
+        var csInterface = new CSInterface();
+
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active'); });
+            document.querySelectorAll('.tab-pane').forEach(function(p) { p.classList.remove('active'); });
+            el.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function applyEase(inVal, outVal) {
+            csInterface.evalScript('applyKeyframeInfluence(' + inVal + ', ' + outVal + ')');
+        }
+
+        function runShake(type) {
+            csInterface.evalScript('applyShakePreset("' + type + '")');
+        }
+
+        function clearShake() {
+            csInterface.evalScript('removeShake()');
+        }
+
+        function applyPreset(type) {
+            csInterface.evalScript('applyUniversalPreset("' + type + '")');
+        }
+
+        function previewSFX(name) {
+            var audio = new Audio('audio/' + name + '.mp3');
+            audio.play().catch(function(e) {});
+        }
+
+        function insertSFXToTimeline(name) {
+            var extPath = decodeURI(csInterface.getSystemPath(SystemPath.EXTENSION)).replace(/\\/g, '/');
+            var audioPath = extPath + '/client/audio/' + name + '.mp3';
+
+            csInterface.evalScript('insertAudioUniversal("' + audioPath + '")', function(res) {
+                if (res && res !== "OK") {
+                    alert(res);
+                }
+            });
+        }
+
+        function applyTextAnimToTimeline(type) {
+            csInterface.evalScript('insertTextUniversal("' + type + '")', function(res) {
+                if (res && res !== "OK") {
+                    alert(res);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
